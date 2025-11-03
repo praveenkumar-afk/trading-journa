@@ -1,0 +1,1695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trading Journal Dashboard</title>
+    <style>
+        :root {
+            --color-background: #1a1d1f;
+            --color-surface: #252829;
+            --color-surface-hover: #2d3234;
+            --color-text: #f5f5f5;
+            --color-text-secondary: #a7a9a9;
+            --color-primary: #32b8c6;
+            --color-primary-hover: #2da4b2;
+            --color-success: #32b8c6;
+            --color-error: #ff5459;
+            --color-warning: #e68161;
+            --color-border: rgba(119, 124, 124, 0.3);
+            --color-card-border: rgba(119, 124, 124, 0.2);
+            --font-family-base: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            --radius-base: 8px;
+            --radius-lg: 12px;
+            --space-4: 4px;
+            --space-8: 8px;
+            --space-12: 12px;
+            --space-16: 16px;
+            --space-24: 24px;
+            --space-32: 32px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-family-base);
+            background: var(--color-background);
+            color: var(--color-text);
+            line-height: 1.5;
+        }
+
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 240px;
+            background: var(--color-surface);
+            padding: var(--space-24);
+            border-right: 1px solid var(--color-border);
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: var(--space-12);
+            margin-bottom: var(--space-32);
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--color-primary);
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: var(--color-primary);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--color-background);
+            font-weight: bold;
+        }
+
+        .nav-menu {
+            list-style: none;
+        }
+
+        .nav-item {
+            margin-bottom: var(--space-8);
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: var(--space-12);
+            padding: var(--space-12);
+            color: var(--color-text-secondary);
+            text-decoration: none;
+            border-radius: var(--radius-base);
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .nav-link:hover {
+            background: var(--color-surface-hover);
+            color: var(--color-text);
+        }
+
+        .nav-link.active {
+            background: rgba(50, 184, 198, 0.15);
+            color: var(--color-primary);
+        }
+
+        .nav-icon {
+            width: 20px;
+            height: 20px;
+        }
+
+        .main-content {
+            flex: 1;
+            margin-left: 240px;
+            padding: var(--space-32);
+        }
+
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        .summary-bar {
+            background: var(--color-surface);
+            padding: var(--space-16) var(--space-24);
+            border-radius: var(--radius-lg);
+            margin-bottom: var(--space-24);
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--space-24);
+        }
+
+        .summary-item {
+            text-align: center;
+        }
+
+        .summary-label {
+            font-size: 13px;
+            color: var(--color-text-secondary);
+            margin-bottom: var(--space-4);
+        }
+
+        .summary-value {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: var(--space-16);
+            margin-bottom: var(--space-32);
+        }
+
+        .kpi-card {
+            background: var(--color-surface);
+            border: 1px solid var(--color-card-border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-24);
+            position: relative;
+        }
+
+        .kpi-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: var(--space-16);
+        }
+
+        .kpi-title {
+            font-size: 14px;
+            color: var(--color-text-secondary);
+            font-weight: 500;
+        }
+
+        .kpi-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .kpi-value {
+            font-size: 32px;
+            font-weight: 600;
+            margin-bottom: var(--space-8);
+        }
+
+        .kpi-change {
+            font-size: 13px;
+            color: var(--color-text-secondary);
+        }
+
+        .kpi-change.positive {
+            color: var(--color-success);
+        }
+
+        .kpi-progress {
+            width: 100%;
+            height: 4px;
+            background: rgba(119, 124, 124, 0.2);
+            border-radius: 2px;
+            margin-top: var(--space-12);
+            overflow: hidden;
+        }
+
+        .kpi-progress-bar {
+            height: 100%;
+            background: var(--color-success);
+            border-radius: 2px;
+            transition: width 0.3s;
+        }
+
+        .chart-container {
+            background: var(--color-surface);
+            border: 1px solid var(--color-card-border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-24);
+            margin-bottom: var(--space-24);
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-24);
+        }
+
+        .chart-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .chart-tabs {
+            display: flex;
+            gap: var(--space-8);
+            background: rgba(119, 124, 124, 0.1);
+            padding: 4px;
+            border-radius: 6px;
+        }
+
+        .chart-tab {
+            padding: 6px 16px;
+            border-radius: 4px;
+            background: transparent;
+            border: none;
+            color: var(--color-text-secondary);
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+
+        .chart-tab.active {
+            background: var(--color-primary);
+            color: var(--color-background);
+        }
+
+        .confidence-index {
+            margin-bottom: var(--space-32);
+        }
+
+        .confidence-bar {
+            width: 100%;
+            height: 8px;
+            background: linear-gradient(to right, #ff5459 0%, #e68161 50%, #32b8c6 100%);
+            border-radius: 4px;
+            position: relative;
+            margin: var(--space-16) 0;
+        }
+
+        .confidence-indicator {
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            background: white;
+            border-radius: 50%;
+            top: -4px;
+            transform: translateX(-8px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .confidence-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            color: var(--color-text-secondary);
+        }
+
+        .confidence-message {
+            text-align: center;
+            margin-top: var(--space-12);
+            color: var(--color-text-secondary);
+            font-size: 14px;
+        }
+
+        .trades-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: var(--space-16);
+        }
+
+        .trade-card {
+            background: var(--color-surface);
+            border: 1px solid var(--color-card-border);
+            border-radius: var(--radius-base);
+            padding: var(--space-16);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .trade-card:hover {
+            border-color: var(--color-primary);
+        }
+
+        .trade-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-12);
+        }
+
+        .trade-symbol {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .trade-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .badge-long, .badge-bullish {
+            background: rgba(50, 184, 198, 0.15);
+            color: var(--color-success);
+        }
+
+        .badge-short, .badge-bearish {
+            background: rgba(255, 84, 89, 0.15);
+            color: var(--color-error);
+        }
+
+        .trade-info {
+            font-size: 13px;
+            color: var(--color-text-secondary);
+            margin-bottom: var(--space-8);
+        }
+
+        .trade-pnl {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: var(--space-4);
+        }
+
+        .pnl-positive {
+            color: var(--color-success);
+        }
+
+        .pnl-negative {
+            color: var(--color-error);
+        }
+
+        .trade-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: var(--space-12);
+            padding-top: var(--space-12);
+            border-top: 1px solid var(--color-border);
+        }
+
+        .btn {
+            padding: var(--space-12) var(--space-24);
+            border-radius: var(--radius-base);
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--color-primary);
+            color: var(--color-background);
+        }
+
+        .btn-primary:hover {
+            background: var(--color-primary-hover);
+        }
+
+        .btn-secondary {
+            background: rgba(119, 124, 124, 0.15);
+            color: var(--color-text);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(119, 124, 124, 0.25);
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--color-surface);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+        }
+
+        .data-table th {
+            background: rgba(119, 124, 124, 0.1);
+            padding: var(--space-16);
+            text-align: left;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--color-text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .data-table td {
+            padding: var(--space-16);
+            border-top: 1px solid var(--color-border);
+            font-size: 14px;
+        }
+
+        .data-table tr:hover {
+            background: rgba(119, 124, 124, 0.05);
+        }
+
+        .strategy-card {
+            background: var(--color-surface);
+            border: 1px solid var(--color-card-border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-24);
+            position: relative;
+        }
+
+        .strategy-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: var(--space-16);
+        }
+
+        .strategy-name {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: var(--space-8);
+        }
+
+        .strategy-usage {
+            display: inline-block;
+            padding: 4px 12px;
+            background: rgba(50, 184, 198, 0.15);
+            color: var(--color-success);
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .strategy-metrics {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--space-16);
+            margin-top: var(--space-16);
+        }
+
+        .metric-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .metric-label {
+            font-size: 13px;
+            color: var(--color-text-secondary);
+        }
+
+        .metric-value {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .win-rate-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(119, 124, 124, 0.2);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: var(--space-8);
+        }
+
+        .win-rate-fill {
+            height: 100%;
+            background: var(--color-success);
+            border-radius: 3px;
+            transition: width 0.3s;
+        }
+
+        .challenge-progress {
+            text-align: center;
+            margin-bottom: var(--space-32);
+        }
+
+        .progress-circle {
+            width: 200px;
+            height: 200px;
+            margin: 0 auto var(--space-24);
+            position: relative;
+        }
+
+        .progress-ring {
+            transform: rotate(-90deg);
+        }
+
+        .progress-ring-bg {
+            fill: none;
+            stroke: rgba(119, 124, 124, 0.2);
+            stroke-width: 12;
+        }
+
+        .progress-ring-fill {
+            fill: none;
+            stroke: var(--color-primary);
+            stroke-width: 12;
+            stroke-linecap: round;
+            transition: stroke-dashoffset 0.5s;
+        }
+
+        .progress-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 36px;
+            font-weight: 700;
+        }
+
+        .challenge-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--space-24);
+            margin-top: var(--space-24);
+        }
+
+        .challenge-stat {
+            text-align: center;
+        }
+
+        .challenge-stat-label {
+            font-size: 13px;
+            color: var(--color-text-secondary);
+            margin-bottom: var(--space-8);
+        }
+
+        .challenge-stat-value {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .form-group {
+            margin-bottom: var(--space-16);
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: var(--space-8);
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--color-text);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: var(--space-12);
+            background: var(--color-background);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-base);
+            color: var(--color-text);
+            font-size: 14px;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--color-primary);
+        }
+
+        select.form-control {
+            cursor: pointer;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--color-surface);
+            border-radius: var(--radius-lg);
+            padding: var(--space-32);
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: var(--space-24);
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: var(--space-12);
+            margin-top: var(--space-24);
+        }
+
+        .chart-placeholder {
+            width: 100%;
+            height: 300px;
+            background: rgba(119, 124, 124, 0.05);
+            border-radius: var(--radius-base);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--color-text-secondary);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: var(--space-32);
+            color: var(--color-text-secondary);
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: var(--space-16);
+            opacity: 0.5;
+        }
+
+        .view-all-link {
+            color: var(--color-primary);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .view-all-link:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s;
+            }
+
+            .sidebar.mobile-open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .kpi-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .trades-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .summary-bar {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <div class="logo-icon">TD</div>
+                <span>Trade Diary</span>
+            </div>
+            <nav>
+                <ul class="nav-menu">
+                    <li class="nav-item">
+                        <a class="nav-link active" data-page="dashboard">
+                            <span class="nav-icon">📊</span>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-page="trades">
+                            <span class="nav-icon">📈</span>
+                            <span>Trades</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-page="strategies">
+                            <span class="nav-icon">💡</span>
+                            <span>Strategies</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-page="rules">
+                            <span class="nav-icon">📋</span>
+                            <span>Rules</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-page="mistakes">
+                            <span class="nav-icon">⚠️</span>
+                            <span>Mistakes</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-page="reports">
+                            <span class="nav-icon">📑</span>
+                            <span>Reports</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-page="challenge">
+                            <span class="nav-icon">🏆</span>
+                            <span>Challenge</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-page="settings">
+                            <span class="nav-icon">⚙️</span>
+                            <span>Settings</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Dashboard Page -->
+            <div id="dashboard" class="page active">
+                <div class="summary-bar">
+                    <div class="summary-item">
+                        <div class="summary-label">Capital</div>
+                        <div class="summary-value" id="totalCapital">₹0</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-label">Total P&L</div>
+                        <div class="summary-value" id="totalPL" style="color: var(--color-success);">₹0</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-label">ROI</div>
+                        <div class="summary-value" id="totalROI" style="color: var(--color-primary);">0%</div>
+                    </div>
+                </div>
+
+                <div class="kpi-grid">
+                    <div class="kpi-card">
+                        <div class="kpi-header">
+                            <div class="kpi-title">Highest P&L</div>
+                            <div class="kpi-icon" style="background: rgba(50, 184, 198, 0.15); color: var(--color-success);">💰</div>
+                        </div>
+                        <div class="kpi-value" id="highestPL" style="color: var(--color-success);">₹0</div>
+                        <div class="kpi-change" id="highestPLChange"></div>
+                        <div class="kpi-progress">
+                            <div class="kpi-progress-bar" id="highestPLProgress" style="width: 0%;"></div>
+                        </div>
+                    </div>
+
+                    <div class="kpi-card">
+                        <div class="kpi-header">
+                            <div class="kpi-title">Win Rate</div>
+                            <div class="kpi-icon" style="background: rgba(50, 184, 198, 0.15); color: var(--color-primary);">🏆</div>
+                        </div>
+                        <div class="kpi-value" id="winRate" style="color: var(--color-primary);">0%</div>
+                        <div class="kpi-change" id="winRateChange"></div>
+                        <div class="kpi-progress">
+                            <div class="kpi-progress-bar" id="winRateProgress" style="width: 0%;"></div>
+                        </div>
+                    </div>
+
+                    <div class="kpi-card">
+                        <div class="kpi-header">
+                            <div class="kpi-title">Avg. Risk/Reward</div>
+                            <div class="kpi-icon" style="background: rgba(147, 51, 234, 0.15); color: #9333ea;">⚖️</div>
+                        </div>
+                        <div class="kpi-value" id="avgRR">-</div>
+                        <div class="kpi-change" id="avgRRChange"></div>
+                    </div>
+
+                    <div class="kpi-card">
+                        <div class="kpi-header">
+                            <div class="kpi-title">Trades This Month</div>
+                            <div class="kpi-icon" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b;">📊</div>
+                        </div>
+                        <div class="kpi-value" id="tradesCount" style="color: #f59e0b;">0</div>
+                        <div class="kpi-change" id="tradesCountChange"></div>
+                        <div class="kpi-progress">
+                            <div class="kpi-progress-bar" id="tradesCountProgress" style="width: 0%; background: #f59e0b;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-container confidence-index">
+                    <h3 class="chart-title">Confidence Index</h3>
+                    <p style="color: var(--color-text-secondary); font-size: 14px; margin-bottom: var(--space-16);">Last 90 Days</p>
+                    <div class="confidence-labels">
+                        <span>Low</span>
+                        <span>High</span>
+                    </div>
+                    <div class="confidence-bar">
+                        <div class="confidence-indicator" id="confidenceIndicator" style="left: 50%;"></div>
+                    </div>
+                    <div class="confidence-message" id="confidenceMessage">
+                        Loading confidence data...
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: var(--space-24); margin-bottom: var(--space-24);">
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h3 class="chart-title">Cumulative P&L</h3>
+                            <div class="chart-tabs">
+                                <button class="chart-tab" data-period="daily">D</button>
+                                <button class="chart-tab active" data-period="weekly">W</button>
+                                <button class="chart-tab" data-period="monthly">M</button>
+                            </div>
+                        </div>
+                        <div class="chart-placeholder" id="pnlChartContainer">
+                            Cumulative P&L Chart
+                        </div>
+                    </div>
+
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h3 class="chart-title">Top Trades</h3>
+                            <a class="view-all-link" data-page="trades">View All</a>
+                        </div>
+                        <div id="topTrades"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Trades Page -->
+            <div id="trades" class="page">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-24);">
+                    <h2 style="font-size: 28px; font-weight: 600;">Trade History</h2>
+                    <button class="btn btn-primary" onclick="openNewTradeModal()">+ New Trade</button>
+                </div>
+
+                <div class="chart-container">
+                    <table class="data-table" id="tradesTable">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Symbol</th>
+                                <th>Direction</th>
+                                <th>Entry/Exit</th>
+                                <th>SL</th>
+                                <th>P/L (₹ / %)</th>
+                                <th>Risk/Reward</th>
+                                <th>Strategy</th>
+                                <th>Outcome</th>
+                                <th>Remarks</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tradesTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Strategies Page -->
+            <div id="strategies" class="page">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-24);">
+                    <h2 style="font-size: 28px; font-weight: 600;">Trading Strategies</h2>
+                    <button class="btn btn-primary" onclick="openNewStrategyModal()">+ New Strategy</button>
+                </div>
+
+                <div class="trades-grid" id="strategiesGrid"></div>
+            </div>
+
+            <!-- Rules Page -->
+            <div id="rules" class="page">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-24);">
+                    <h2 style="font-size: 28px; font-weight: 600;">Trading Rules</h2>
+                    <button class="btn btn-primary" onclick="openNewRuleModal()">+ Create New Rule</button>
+                </div>
+
+                <div class="chart-container">
+                    <p style="color: var(--color-text-secondary); margin-bottom: var(--space-24);">
+                        Define and track your trading rules to maintain discipline and consistency.
+                    </p>
+                    <div id="rulesContainer"></div>
+                </div>
+            </div>
+
+            <!-- Mistakes Page -->
+            <div id="mistakes" class="page">
+                <h2 style="font-size: 28px; font-weight: 600; margin-bottom: var(--space-24);">Trading Mistakes</h2>
+                <div class="chart-container">
+                    <p style="color: var(--color-text-secondary); margin-bottom: var(--space-24);">
+                        Track and learn from your trading mistakes to improve performance.
+                    </p>
+                    <div id="mistakesContainer"></div>
+                </div>
+            </div>
+
+            <!-- Reports Page -->
+            <div id="reports" class="page">
+                <h2 style="font-size: 28px; font-weight: 600; margin-bottom: var(--space-24);">Reports</h2>
+
+                <div class="kpi-grid" style="margin-bottom: var(--space-24);">
+                    <div class="chart-container">
+                        <h3 class="chart-title" style="margin-bottom: var(--space-16);">Capital Usage</h3>
+                        <div class="metric-item" style="margin-bottom: var(--space-12);">
+                            <span class="metric-label">Maximum</span>
+                            <span class="metric-value" id="maxCapital">₹0</span>
+                        </div>
+                        <div class="metric-item" style="margin-bottom: var(--space-12);">
+                            <span class="metric-label">Minimum</span>
+                            <span class="metric-value" id="minCapital">₹0</span>
+                        </div>
+                        <div class="metric-item" style="margin-bottom: var(--space-12);">
+                            <span class="metric-label">Average</span>
+                            <span class="metric-value" id="avgCapital">₹0</span>
+                        </div>
+                        <div class="metric-item" style="margin-bottom: var(--space-12);">
+                            <span class="metric-label">P&L at Max Capital</span>
+                            <span class="metric-value" id="plMaxCapital">₹0</span>
+                        </div>
+                    </div>
+
+                    <div class="chart-container">
+                        <h3 class="chart-title" style="margin-bottom: var(--space-16);">Quantity Analysis</h3>
+                        <div class="metric-item" style="margin-bottom: var(--space-12);">
+                            <span class="metric-label">Maximum</span>
+                            <span class="metric-value" id="maxQty">0</span>
+                        </div>
+                        <div class="metric-item" style="margin-bottom: var(--space-12);">
+                            <span class="metric-label">Minimum</span>
+                            <span class="metric-value" id="minQty">0</span>
+                        </div>
+                        <div class="metric-item" style="margin-bottom: var(--space-12);">
+                            <span class="metric-label">Average</span>
+                            <span class="metric-value" id="avgQty">0</span>
+                        </div>
+                        <div class="metric-item" style="margin-bottom: var(--space-12);">
+                            <span class="metric-label">P&L at Max Qty</span>
+                            <span class="metric-value" id="plMaxQty">₹0</span>
+                        </div>
+                    </div>
+
+                    <div class="chart-container">
+                        <h3 class="chart-title" style="margin-bottom: var(--space-16);">Weekday Avg R:R</h3>
+                        <div id="weekdayRR"></div>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-24);">
+                    <div class="chart-container">
+                        <h3 class="chart-title" style="margin-bottom: var(--space-16);">Weekday Win Rate</h3>
+                        <div id="weekdayWinRate"></div>
+                    </div>
+
+                    <div class="chart-container">
+                        <h3 class="chart-title" style="margin-bottom: var(--space-16);">Daily Trade Activity</h3>
+                        <div class="metric-item" style="margin-bottom: var(--space-12);">
+                            <span class="metric-label">Avg Trades Per Day</span>
+                            <span class="metric-value" id="avgTradesPerDay">0</span>
+                        </div>
+                        <div class="metric-item" style="margin-bottom: var(--space-12);">
+                            <span class="metric-label">Max Trades in a Day</span>
+                            <span class="metric-value" id="maxTradesPerDay">0</span>
+                        </div>
+                        <div class="metric-item" style="margin-bottom: var(--space-12);">
+                            <span class="metric-label">Days With Only 1 Trade</span>
+                            <span class="metric-value" id="daysWithOneTrade">0</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">Overtrading Days (>7 trades)</span>
+                            <span class="metric-value" id="overtradingDays" style="color: var(--color-error);">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Challenge Page -->
+            <div id="challenge" class="page">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-24);">
+                    <h2 style="font-size: 28px; font-weight: 600;">Capital Growth Challenge</h2>
+                    <button class="btn btn-primary" onclick="openChallengeModal()">Set Challenge</button>
+                </div>
+
+                <div class="chart-container">
+                    <p style="color: var(--color-text-secondary); margin-bottom: var(--space-24);">
+                        Track your progress towards your trading goals with real-time analytics and performance metrics.
+                    </p>
+
+                    <div class="challenge-progress">
+                        <div class="progress-circle">
+                            <svg class="progress-ring" width="200" height="200">
+                                <circle class="progress-ring-bg" cx="100" cy="100" r="90"></circle>
+                                <circle class="progress-ring-fill" id="progressRingFill" cx="100" cy="100" r="90"
+                                    stroke-dasharray="565.48" stroke-dashoffset="565.48"></circle>
+                            </svg>
+                            <div class="progress-text" id="progressPercent">0%</div>
+                        </div>
+                        <p style="color: var(--color-text-secondary); font-size: 14px;">Progress to target</p>
+                    </div>
+
+                    <div class="challenge-stats">
+                        <div class="challenge-stat">
+                            <div class="challenge-stat-label">Starting</div>
+                            <div class="challenge-stat-value" id="challengeStarting">₹0</div>
+                        </div>
+                        <div class="challenge-stat">
+                            <div class="challenge-stat-label">Current</div>
+                            <div class="challenge-stat-value" id="challengeCurrent" style="color: var(--color-success);">₹0</div>
+                        </div>
+                        <div class="challenge-stat">
+                            <div class="challenge-stat-label">Target</div>
+                            <div class="challenge-stat-value" id="challengeTarget">₹0</div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: var(--space-32); padding-top: var(--space-24); border-top: 1px solid var(--color-border);">
+                        <div class="metric-item" style="margin-bottom: var(--space-16);">
+                            <span class="metric-label">Daily Target</span>
+                            <span class="metric-value" id="dailyTarget">₹0/day</span>
+                        </div>
+                        <div class="metric-item" style="margin-bottom: var(--space-16);">
+                            <span class="metric-label">Days Remaining</span>
+                            <span class="metric-value" id="daysRemaining">0</span>
+                        </div>
+                        <div class="win-rate-bar">
+                            <div class="win-rate-fill" id="challengeProgressBar" style="width: 0%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Page -->
+            <div id="settings" class="page">
+                <h2 style="font-size: 28px; font-weight: 600; margin-bottom: var(--space-24);">Settings</h2>
+
+                <div class="chart-container">
+                    <h3 class="chart-title" style="margin-bottom: var(--space-24);">Google Sheets Integration</h3>
+                    
+                    <button class="btn btn-primary" onclick="connectGoogleSheets()">Refresh Data from Google Sheets</button>
+
+                    <div style="margin-top: var(--space-24); padding: var(--space-16); background: rgba(50, 184, 198, 0.1); border-radius: var(--radius-base);">
+                        <p style="font-size: 14px; color: var(--color-success); margin-bottom: var(--space-8);">
+                            <strong>✓ Connected to Google Sheets</strong>
+                        </p>
+                        <p style="font-size: 13px; color: var(--color-text-secondary); margin-bottom: var(--space-12);">
+                            Your dashboard is now connected to: <br/>
+                            <code style="font-size: 11px; word-break: break-all;">https://script.google.com/macros/s/AKfycbxk0zuUSff4150jrZ4S5UR0ZnN9FCHwQOGCrvz7R57Pq3nObekYYROy4YZ2vFfeOdUC/exec</code>
+                        </p>
+                        <p style="font-size: 13px; color: var(--color-text-secondary);">
+                            Data automatically loads on page refresh. Click "Refresh Data from Google Sheets" button above to manually reload.
+                        </p>
+                    </div>
+
+                    <div style="margin-top: var(--space-24); padding: var(--space-16); background: rgba(245, 158, 11, 0.1); border-radius: var(--radius-base);">
+                        <p style="font-size: 14px; color: #f59e0b; margin-bottom: var(--space-12);"><strong>📋 Required Columns in Google Sheet:</strong></p>
+                        <code style="font-size: 12px;">Date, Symbol, Direction, Entry, Exit, SL, Quantity, Strategy, Outcome, Remarks</code>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- New Trade Modal -->
+    <div id="newTradeModal" class="modal">
+        <div class="modal-content">
+            <h2 class="modal-header">Add New Trade</h2>
+            
+            <div class="form-group">
+                <label class="form-label">Date</label>
+                <input type="date" class="form-control" id="tradeDate">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Symbol</label>
+                <input type="text" class="form-control" id="tradeSymbol" placeholder="e.g., NIFTY 50">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Direction</label>
+                <select class="form-control" id="tradeDirection">
+                    <option value="Long">Long</option>
+                    <option value="Short">Short</option>
+                </select>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--space-16);">
+                <div class="form-group">
+                    <label class="form-label">Entry Price</label>
+                    <input type="number" step="0.01" class="form-control" id="tradeEntry">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Exit Price</label>
+                    <input type="number" step="0.01" class="form-control" id="tradeExit">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Stop Loss</label>
+                    <input type="number" step="0.01" class="form-control" id="tradeSL">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Quantity</label>
+                <input type="number" class="form-control" id="tradeQuantity">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Strategy</label>
+                <input type="text" class="form-control" id="tradeStrategy" placeholder="e.g., Breakout, Trend">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Outcome</label>
+                <select class="form-control" id="tradeOutcome">
+                    <option value="Full Success">Full Success</option>
+                    <option value="Partial Success">Partial Success</option>
+                    <option value="Mistake">Mistake</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Remarks</label>
+                <input type="text" class="form-control" id="tradeRemarks" placeholder="Optional notes">
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="saveTrade()">Save Trade</button>
+                <button class="btn btn-secondary" onclick="closeNewTradeModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Challenge Modal -->
+    <div id="challengeModal" class="modal">
+        <div class="modal-content">
+            <h2 class="modal-header">Set Trading Challenge</h2>
+            
+            <div class="form-group">
+                <label class="form-label">Starting Capital</label>
+                <input type="number" class="form-control" id="challengeStartCapital" placeholder="₹ 1,00,000">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Target Capital</label>
+                <input type="number" class="form-control" id="challengeTargetCapital" placeholder="₹ 2,50,000">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Timeframe</label>
+                <select class="form-control" id="challengeTimeframe">
+                    <option value="7">1 Week</option>
+                    <option value="14">2 Weeks</option>
+                    <option value="30">1 Month</option>
+                    <option value="60">2 Months</option>
+                    <option value="90">3 Months</option>
+                </select>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="saveChallenge()">Set Challenge</button>
+                <button class="btn btn-secondary" onclick="closeChallengeModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global data store
+        let tradesData = [];
+        let challengeData = null;
+        const GOOGLE_SHEETS_API_URL = 'https://script.google.com/macros/s/AKfycbxk0zuUSff4150jrZ4S5UR0ZnN9FCHwQOGCrvz7R57Pq3nObekYYROy4YZ2vFfeOdUC/exec';
+
+        // Navigation
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const pageName = this.getAttribute('data-page');
+                
+                document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+                this.classList.add('active');
+                
+                document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+                document.getElementById(pageName).classList.add('active');
+            });
+        });
+
+        // View All link
+        document.querySelectorAll('.view-all-link').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const pageName = this.getAttribute('data-page');
+                document.querySelector(`[data-page="${pageName}"]`).click();
+            });
+        });
+
+        // Chart tabs
+        document.querySelectorAll('.chart-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                this.parentElement.querySelectorAll('.chart-tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        // Modal functions
+        function openNewTradeModal() {
+            document.getElementById('newTradeModal').classList.add('active');
+            document.getElementById('tradeDate').valueAsDate = new Date();
+        }
+
+        function closeNewTradeModal() {
+            document.getElementById('newTradeModal').classList.remove('active');
+        }
+
+        function openChallengeModal() {
+            document.getElementById('challengeModal').classList.add('active');
+        }
+
+        function closeChallengeModal() {
+            document.getElementById('challengeModal').classList.remove('active');
+        }
+
+        function openNewStrategyModal() {
+            alert('Add strategies by using them in trades. The dashboard automatically tracks strategy performance.');
+        }
+
+        function openNewRuleModal() {
+            alert('Trading rules feature coming soon. Use the Remarks column in trades to note rule adherence.');
+        }
+
+        async function saveTrade() {
+            const entry = parseFloat(document.getElementById('tradeEntry').value);
+            const exit = parseFloat(document.getElementById('tradeExit').value);
+            const sl = parseFloat(document.getElementById('tradeSL').value);
+            const quantity = parseInt(document.getElementById('tradeQuantity').value);
+            const direction = document.getElementById('tradeDirection').value;
+            
+            const pnl = (exit - entry) * quantity * (direction === 'Long' ? 1 : -1);
+            const pnlPercent = ((exit - entry) / entry * 100 * (direction === 'Long' ? 1 : -1)).toFixed(2);
+            const riskReward = sl ? Math.abs((exit - entry) / (entry - sl)).toFixed(2) : '-';
+
+            const trade = {
+                Date: document.getElementById('tradeDate').value,
+                Symbol: document.getElementById('tradeSymbol').value,
+                Direction: direction,
+                Entry: entry,
+                Exit: exit,
+                SL: sl || '',
+                Quantity: quantity,
+                Strategy: document.getElementById('tradeStrategy').value,
+                Outcome: document.getElementById('tradeOutcome').value,
+                Remarks: document.getElementById('tradeRemarks').value || '',
+                pnl: pnl,
+                pnlPercent: pnlPercent,
+                rr: riskReward
+            };
+
+            // Save to Google Sheets
+            try {
+                const response = await fetch(GOOGLE_SHEETS_API_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(trade)
+                });
+
+                tradesData.push(trade);
+                renderAll();
+                closeNewTradeModal();
+                
+                // Clear form
+                document.getElementById('tradeSymbol').value = '';
+                document.getElementById('tradeEntry').value = '';
+                document.getElementById('tradeExit').value = '';
+                document.getElementById('tradeSL').value = '';
+                document.getElementById('tradeQuantity').value = '';
+                document.getElementById('tradeStrategy').value = '';
+                document.getElementById('tradeRemarks').value = '';
+                
+                alert('Trade saved successfully to Google Sheets!');
+                
+                // Reload data to ensure sync
+                setTimeout(() => loadDataFromGoogleSheets(), 1000);
+            } catch (error) {
+                console.error('Error saving to Google Sheets:', error);
+                alert('Trade saved locally but failed to sync with Google Sheets. Please check your connection.');
+            }
+        }
+
+        function saveChallenge() {
+            challengeData = {
+                starting: parseFloat(document.getElementById('challengeStartCapital').value),
+                target: parseFloat(document.getElementById('challengeTargetCapital').value),
+                timeframe: parseInt(document.getElementById('challengeTimeframe').value),
+                startDate: new Date().toISOString()
+            };
+            
+            localStorage.setItem('tradingChallenge', JSON.stringify(challengeData));
+            renderChallenge();
+            closeChallengeModal();
+            alert('Challenge set successfully!');
+        }
+
+        // Render functions
+        function renderAll() {
+            renderTrades();
+            renderTopTrades();
+            updateKPIs();
+            renderStrategies();
+            renderReports();
+            renderChallenge();
+        }
+
+        function renderTrades() {
+            const tbody = document.getElementById('tradesTableBody');
+            tbody.innerHTML = '';
+
+            tradesData.slice().reverse().forEach(trade => {
+                const row = tbody.insertRow();
+                const pnlClass = trade.pnl >= 0 ? 'pnl-positive' : 'pnl-negative';
+                const dirClass = (trade.Direction === 'Long' || trade.Direction === 'Bullish') ? 'badge-long' : 'badge-short';
+                
+                row.innerHTML = `
+                    <td>${formatDate(trade.Date)}</td>
+                    <td><strong>${trade.Symbol}</strong></td>
+                    <td><span class="trade-badge ${dirClass}">${trade.Direction}</span></td>
+                    <td>${trade.Entry}<br/>${trade.Exit}</td>
+                    <td>${trade.SL || '-'}</td>
+                    <td class="${pnlClass}">₹${trade.pnl.toFixed(2)}<br/>${trade.pnlPercent}%</td>
+                    <td>${trade.rr || '-'}</td>
+                    <td>${trade.Strategy}</td>
+                    <td><span class="trade-badge ${trade.Outcome === 'Full Success' ? 'badge-long' : trade.Outcome === 'Mistake' ? 'badge-short' : ''}">${trade.Outcome}</span></td>
+                    <td style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${trade.Remarks || '-'}</td>
+                `;
+            });
+        }
+
+        function renderTopTrades() {
+            const topTrades = [...tradesData].sort((a, b) => b.pnl - a.pnl).slice(0, 3);
+            const container = document.getElementById('topTrades');
+            
+            if (topTrades.length === 0) {
+                container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📊</div><p>No trades yet</p></div>';
+                return;
+            }
+
+            container.innerHTML = '';
+            topTrades.forEach(trade => {
+                const pnlClass = trade.pnl >= 0 ? 'pnl-positive' : 'pnl-negative';
+                const dirClass = (trade.Direction === 'Long' || trade.Direction === 'Bullish') ? 'badge-long' : 'badge-short';
+                const card = document.createElement('div');
+                card.className = 'trade-card';
+                card.innerHTML = `
+                    <div class="trade-header">
+                        <div class="trade-symbol">${trade.Symbol}</div>
+                        <div class="trade-badge ${dirClass}">${trade.Direction}</div>
+                    </div>
+                    <div class="trade-info">${formatDate(trade.Date)}</div>
+                    <div class="trade-info">Entry: ₹${trade.Entry}</div>
+                    <div class="trade-pnl ${pnlClass}">₹${trade.pnl.toFixed(2)} (${trade.pnlPercent}%)</div>
+                    <div class="trade-footer">
+                        <span style="font-size: 13px; color: var(--color-text-secondary);">Exit: ₹${trade.Exit}</span>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function updateKPIs() {
+            if (tradesData.length === 0) {
+                document.getElementById('totalCapital').textContent = '₹0';
+                document.getElementById('totalPL').textContent = '₹0';
+                document.getElementById('totalROI').textContent = '0%';
+                document.getElementById('highestPL').textContent = '₹0';
+                document.getElementById('winRate').textContent = '0%';
+                document.getElementById('avgRR').textContent = '-';
+                document.getElementById('tradesCount').textContent = '0';
+                return;
+            }
+
+            const totalPL = tradesData.reduce((sum, t) => sum + t.pnl, 0);
+            const avgCapital = tradesData.reduce((sum, t) => sum + (t.Entry * t.Quantity), 0) / tradesData.length;
+            const roi = (totalPL / avgCapital * 100).toFixed(2);
+            const highestPL = Math.max(...tradesData.map(t => t.pnl));
+            const winningTrades = tradesData.filter(t => t.pnl > 0).length;
+            const winRate = (winningTrades / tradesData.length * 100).toFixed(1);
+            
+            const tradesWithRR = tradesData.filter(t => t.rr && t.rr !== '-');
+            const avgRR = tradesWithRR.length > 0 
+                ? (tradesWithRR.reduce((sum, t) => sum + parseFloat(t.rr), 0) / tradesWithRR.length).toFixed(2)
+                : '-';
+
+            document.getElementById('totalCapital').textContent = `₹${avgCapital.toFixed(0)}`;
+            document.getElementById('totalPL').textContent = `₹${totalPL.toFixed(2)}`;
+            document.getElementById('totalPL').style.color = totalPL >= 0 ? 'var(--color-success)' : 'var(--color-error)';
+            document.getElementById('totalROI').textContent = `${roi}%`;
+            document.getElementById('highestPL').textContent = `₹${highestPL.toFixed(2)}`;
+            document.getElementById('winRate').textContent = `${winRate}%`;
+            document.getElementById('avgRR').textContent = avgRR !== '-' ? `1:${avgRR}` : '-';
+            document.getElementById('tradesCount').textContent = tradesData.length;
+            
+            document.getElementById('winRateProgress').style.width = `${winRate}%`;
+            document.getElementById('tradesCountProgress').style.width = `${Math.min(tradesData.length * 2, 100)}%`;
+            
+            // Confidence index
+            const confidenceScore = winRate;
+            document.getElementById('confidenceIndicator').style.left = `${confidenceScore}%`;
+            const messages = {
+                low: 'Low Confidence – Focus on reviewing your strategy and risk management.',
+                medium: 'Medium Confidence – You\'re making progress. Keep following your plan.',
+                high: 'High Confidence – You are trading well with consistent focus.'
+            };
+            const level = confidenceScore < 40 ? 'low' : confidenceScore < 70 ? 'medium' : 'high';
+            document.getElementById('confidenceMessage').textContent = messages[level];
+        }
+
+        function renderStrategies() {
+            const strategyCounts = {};
+            const strategyMetrics = {};
+
+            tradesData.forEach(trade => {
+                const strat = trade.Strategy || 'Other';
+                if (!strategyCounts[strat]) {
+                    strategyCounts[strat] = 0;
+                    strategyMetrics[strat] = { wins: 0, total: 0, totalProfit: 0, rr: [] };
+                }
+                strategyCounts[strat]++;
+                strategyMetrics[strat].total++;
+                strategyMetrics[strat].totalProfit += trade.pnl;
+                if (trade.pnl > 0) strategyMetrics[strat].wins++;
+                if (trade.rr && trade.rr !== '-') strategyMetrics[strat].rr.push(parseFloat(trade.rr));
+            });
+
+            const container = document.getElementById('strategiesGrid');
+            container.innerHTML = '';
+
+            if (Object.keys(strategyCounts).length === 0) {
+                container.innerHTML = '<div class="empty-state" style="grid-column: 1 / -1;"><div class="empty-state-icon">💡</div><p>Add trades to see strategy performance</p></div>';
+                return;
+            }
+
+            Object.entries(strategyCounts).forEach(([strategy, count]) => {
+                const metrics = strategyMetrics[strategy];
+                const winRate = (metrics.wins / metrics.total * 100).toFixed(1);
+                const usage = (count / tradesData.length * 100).toFixed(0);
+                const avgRR = metrics.rr.length > 0 ? (metrics.rr.reduce((a,b) => a+b, 0) / metrics.rr.length).toFixed(2) : '-';
+
+                const card = document.createElement('div');
+                card.className = 'strategy-card';
+                card.innerHTML = `
+                    <div class="strategy-header">
+                        <div>
+                            <div class="strategy-name">${strategy}</div>
+                            <div style="color: var(--color-text-secondary); font-size: 13px;">Strategy Usage</div>
+                        </div>
+                        <div class="strategy-usage">${usage}%</div>
+                    </div>
+                    <div class="strategy-metrics">
+                        <div class="metric-item">
+                            <span class="metric-label">Profit Factor</span>
+                            <span class="metric-value">${avgRR !== '-' ? avgRR : '-'}</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">Risk/Trade</span>
+                            <span class="metric-value">-</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">Total Profit</span>
+                            <span class="metric-value" style="color: ${metrics.totalProfit >= 0 ? 'var(--color-success)' : 'var(--color-error)'}">₹${metrics.totalProfit.toFixed(2)}</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">Win Rate</span>
+                            <span class="metric-value">${winRate}%</span>
+                        </div>
+                    </div>
+                    <div class="win-rate-bar">
+                        <div class="win-rate-fill" style="width: ${winRate}%;"></div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function renderReports() {
+            if (tradesData.length === 0) return;
+
+            const capitals = tradesData.map(t => t.Entry * t.Quantity);
+            const quantities = tradesData.map(t => t.Quantity);
+            
+            document.getElementById('maxCapital').textContent = `₹${Math.max(...capitals).toFixed(0)}`;
+            document.getElementById('minCapital').textContent = `₹${Math.min(...capitals).toFixed(0)}`;
+            document.getElementById('avgCapital').textContent = `₹${(capitals.reduce((a,b) => a+b, 0) / capitals.length).toFixed(0)}`;
+            
+            const maxCapTrade = tradesData[capitals.indexOf(Math.max(...capitals))];
+            document.getElementById('plMaxCapital').textContent = `₹${maxCapTrade.pnl.toFixed(2)}`;
+            document.getElementById('plMaxCapital').style.color = maxCapTrade.pnl >= 0 ? 'var(--color-success)' : 'var(--color-error)';
+            
+            document.getElementById('maxQty').textContent = Math.max(...quantities);
+            document.getElementById('minQty').textContent = Math.min(...quantities);
+            document.getElementById('avgQty').textContent = Math.round(quantities.reduce((a,b) => a+b, 0) / quantities.length);
+            
+            const maxQtyTrade = tradesData[quantities.indexOf(Math.max(...quantities))];
+            document.getElementById('plMaxQty').textContent = `₹${maxQtyTrade.pnl.toFixed(2)}`;
+            document.getElementById('plMaxQty').style.color = maxQtyTrade.pnl >= 0 ? 'var(--color-success)' : 'var(--color-error)';
+
+            // Weekday metrics
+            const weekdays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            const weekdayData = {};
+            
+            tradesData.forEach(trade => {
+                const day = new Date(trade.Date).getDay();
+                const dayName = weekdays[day];
+                if (!weekdayData[dayName]) {
+                    weekdayData[dayName] = { wins: 0, total: 0, rr: [] };
+                }
+                weekdayData[dayName].total++;
+                if (trade.pnl > 0) weekdayData[dayName].wins++;
+                if (trade.rr && trade.rr !== '-') weekdayData[dayName].rr.push(parseFloat(trade.rr));
+            });
+
+            let weekdayRRHTML = '';
+            let weekdayWinRateHTML = '';
+            
+            ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].forEach(day => {
+                const data = weekdayData[day];
+                if (data) {
+                    const avgRR = data.rr.length > 0 ? (data.rr.reduce((a,b) => a+b, 0) / data.rr.length).toFixed(2) : '-';
+                    const winRate = ((data.wins / data.total) * 100).toFixed(0);
+                    weekdayRRHTML += `<div class="metric-item" style="margin-bottom: var(--space-8);"><span class="metric-label">${day}</span><span class="metric-value">${avgRR !== '-' ? avgRR + 'R' : '-'}</span></div>`;
+                    weekdayWinRateHTML += `<div class="metric-item" style="margin-bottom: var(--space-8);"><span class="metric-label">${day}</span><span class="metric-value" style="color: var(--color-success);">${winRate}%</span></div>`;
+                }
+            });
+            
+            document.getElementById('weekdayRR').innerHTML = weekdayRRHTML || '<p style="color: var(--color-text-secondary);">No data</p>';
+            document.getElementById('weekdayWinRate').innerHTML = weekdayWinRateHTML || '<p style="color: var(--color-text-secondary);">No data</p>';
+
+            // Daily activity
+            const dateGroups = {};
+            tradesData.forEach(trade => {
+                const date = trade.Date;
+                dateGroups[date] = (dateGroups[date] || 0) + 1;
+            });
+            
+            const tradesPerDay = Object.values(dateGroups);
+            document.getElementById('avgTradesPerDay').textContent = (tradesPerDay.reduce((a,b) => a+b, 0) / tradesPerDay.length).toFixed(1);
+            document.getElementById('maxTradesPerDay').textContent = Math.max(...tradesPerDay);
+            document.getElementById('daysWithOneTrade').textContent = tradesPerDay.filter(c => c === 1).length;
+            document.getElementById('overtradingDays').textContent = tradesPerDay.filter(c => c > 7).length;
+        }
+
+        function renderChallenge() {
+            const savedChallenge = localStorage.getItem('tradingChallenge');
+            if (savedChallenge) {
+                challengeData = JSON.parse(savedChallenge);
+            }
+
+            if (!challengeData) {
+                document.getElementById('challengeStarting').textContent = '₹0';
+                document.getElementById('challengeCurrent').textContent = '₹0';
+                document.getElementById('challengeTarget').textContent = '₹0';
+                document.getElementById('progressPercent').textContent = '0%';
+                document.getElementById('dailyTarget').textContent = '₹0/day';
+                document.getElementById('daysRemaining').textContent = '0';
+                return;
+            }
+
+            const current = challengeData.starting + tradesData.reduce((sum, t) => sum + t.pnl, 0);
+            const progress = ((current - challengeData.starting) / (challengeData.target - challengeData.starting) * 100).toFixed(2);
+            const startDate = new Date(challengeData.startDate);
+            const endDate = new Date(startDate);
+            endDate.setDate(endDate.getDate() + challengeData.timeframe);
+            const daysRemaining = Math.max(0, Math.ceil((endDate - new Date()) / (1000 * 60 * 60 * 24)));
+            const dailyTarget = ((challengeData.target - current) / Math.max(daysRemaining, 1)).toFixed(2);
+
+            document.getElementById('challengeStarting').textContent = `₹${challengeData.starting.toLocaleString()}`;
+            document.getElementById('challengeCurrent').textContent = `₹${current.toFixed(2)}`;
+            document.getElementById('challengeTarget').textContent = `₹${challengeData.target.toLocaleString()}`;
+            document.getElementById('progressPercent').textContent = `${Math.min(progress, 100).toFixed(1)}%`;
+            document.getElementById('dailyTarget').textContent = `₹${dailyTarget}/day`;
+            document.getElementById('daysRemaining').textContent = daysRemaining;
+            
+            const circumference = 2 * Math.PI * 90;
+            const offset = circumference - (Math.min(progress, 100) / 100) * circumference;
+            document.getElementById('progressRingFill').style.strokeDashoffset = offset;
+            document.getElementById('challengeProgressBar').style.width = `${Math.min(progress, 100)}%`;
+        }
+
+        // Google Sheets integration
+        function connectGoogleSheets() {
+            loadDataFromGoogleSheets();
+        }
+
+        async function loadDataFromGoogleSheets() {
+            try {
+                const response = await fetch(GOOGLE_SHEETS_API_URL);
+                const data = await response.json();
+                
+                if (data && data.length > 0) {
+                    tradesData = data.map(row => {
+                        const entry = parseFloat(row.Entry) || 0;
+                        const exit = parseFloat(row.Exit) || 0;
+                        const sl = parseFloat(row.SL) || null;
+                        const quantity = parseInt(row.Quantity) || 0;
+                        const direction = row.Direction || 'Long';
+                        
+                        const pnl = (exit - entry) * quantity * ((direction === 'Long' || direction === 'Bullish') ? 1 : -1);
+                        const pnlPercent = entry > 0 ? ((exit - entry) / entry * 100 * ((direction === 'Long' || direction === 'Bullish') ? 1 : -1)).toFixed(2) : 0;
+                        const rr = sl && sl !== entry ? Math.abs((exit - entry) / (entry - sl)).toFixed(2) : '-';
+                        
+                        return {
+                            Date: row.Date || new Date().toISOString().split('T')[0],
+                            Symbol: row.Symbol || '',
+                            Direction: direction,
+                            Entry: entry,
+                            Exit: exit,
+                            SL: sl,
+                            Quantity: quantity,
+                            Strategy: row.Strategy || '',
+                            Outcome: row.Outcome || '',
+                            Remarks: row.Remarks || '',
+                            pnl: pnl,
+                            pnlPercent: pnlPercent,
+                            rr: rr
+                        };
+                    });
+
+                    renderAll();
+                    alert(`Successfully loaded ${tradesData.length} trades from Google Sheets!`);
+                } else {
+                    alert('No data found in Google Sheets. Please add trades to your sheet.');
+                }
+            } catch (error) {
+                console.error('Error loading from Google Sheets:', error);
+                alert('Failed to load data from Google Sheets. Please check your setup.');
+            }
+        }
+
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDataFromGoogleSheets();
+            
+            // Load saved challenge
+            const savedChallenge = localStorage.getItem('tradingChallenge');
+            if (savedChallenge) {
+                challengeData = JSON.parse(savedChallenge);
+            }
+        });
+    </script>
+</body>
+</html>
